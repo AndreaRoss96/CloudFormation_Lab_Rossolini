@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Enhanced RESTful API using AWS API Gateway and AWS Lambda.
+  Returns client IP address
+  Implements best practices for IAM, environment variables, monitoring, and observability.
+
+Resources:
+
+  # --------------------------------------------------------------------------
+  # API Gateway Resources <--> from Tutorial
+  # --------------------------------------------------------------------------
+  SimpleRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: REST API that gets users IP
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: whats_my_ip
+
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt SimpleRestAPI.RootResourceId
+      PathPart: "ip"
+      RestApiId: !Ref SimpleRestAPI
+
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        Credentials: !GetAtt ApiGatewayIamRole.Arn
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref SimpleRestAPI
+
+  ApiGatewayModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      ContentType: 'application/json'
+      RestApiId: !Ref SimpleRestAPI
+      Schema: {}
+
+  ApiGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      TracingEnabled: true  # Enables X-Ray tracing for API Gateway
+      DeploymentId: !Ref ApiGatewayDeployment
+      Description: Development stage
+      RestApiId: !Ref SimpleRestAPI
+      StageName: dev
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiGatewayMethod
+    Properties:
+      Description: Lambda API Deployment
+      RestApiId: !Ref SimpleRestAPI
+
+  # --------------------------------------------------------------------------
+  # API Gateway IAM Role
+  # --------------------------------------------------------------------------
+  ApiGatewayIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: 'Allow'
+            Principal:
+              Service: 'apigateway.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: InvokeLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'lambda:InvokeFunction' # lambda:* -> is over permissible
+                Resource: !GetAtt LambdaFunction.Arn
+
+  # --------------------------------------------------------------------------
+  # Lambda Function --> improve from tutorial for higher grade 
+  # --------------------------------------------------------------------------
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: >
+        Lambda function that returns client IP address.
+      Code:
+        ZipFile: |
+          ...
+      FunctionName: 'get_ip'
+      Handler: index.lambda_handler
+      MemorySize: 256
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.9
+      Timeout: 60
+
+  # --------------------------------------------------------------------------
+  # Lambda IamRole -> to improve
+  # --------------------------------------------------------------------------
+  LambdaIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+
+
+  # --------------------------------------------------------------------------
+  # Lambda Permission for API Gateway
+  # --------------------------------------------------------------------------
+
+
+  # --------------------------------------------------------------------------
+  # Outputs
+  # --------------------------------------------------------------------------
