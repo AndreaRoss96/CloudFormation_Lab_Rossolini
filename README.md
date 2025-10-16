@@ -4,6 +4,16 @@ Cloud Formation example in AWS
 
 This lab is initially based on the guide “Build and Deploy REST API on AWS” by Rino-Dev (https://rino-dev.com/build-and-deploy-rest-api-on-aws). The original example was replicated for learning purposes and subsequently enhanced to include improved functionality, better security, and automation practices.
 
+## What this repo contains
+- template.yaml — CloudFormation template (Lambda + API Gateway + DynamoDB)
+- index.py — Lambda handler code
+
+# To be added
+- deploy.sh — packaging & deploy helper
+- lab_report.docx — Report of this 
+# How to deploy
+1. Create a S3 bucket
+2. Run `./deploy.sh` (when avialable)
 
 ## Requirements
 aws cli 
