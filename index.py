@@ -1,13 +1,20 @@
 import os
 import json
-import logging # http://realpython.com/python-logging/
+import logging
+import boto3
 
+# Logging configs
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO") # verbosity control
 logging.basicConfig(
     level=LOG_LEVEL
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# DynamoDB setup
+TABLE_NAME = os.getenv("TABLE_ENV", "ItemsTable")
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(TABLE_NAME)
 
 #region Utility Functions
 def response(status_code, body):
@@ -47,30 +54,44 @@ def lambda_handler(event, context):
     logger.info(f"Request {request_id} received: method={method}")
     logger.debug(f"Full event: {json.dumps(event)}")
 
-    if method == "GET":
-        logger.info(f"GET request processed for Request ID {request_id}")
-        return response(200,
-            {
-                "message": "POST received",
-                "data": {"message": "GET request received"}
-            })
-    elif method == "POST":
-        try:
+    try:
+        if method == "GET":
+            logger.info(f"GET request processed for Request ID {request_id}")
+            params = event.get("queryStringParameters") or {}
+            item_id = params.get("id") if params else None
+            if not item_id:
+                return response(400, {"error": "Missing query parameter: id"})
+            
+            try:
+                res = table.get_item(Key={"id": item_id})
+                item = result.get("Item")
+                if not item:
+                    return response(404, {"error": "Item not found"})
+                logger.info(f"Retrieved item: {item}")
+                return response(200, {"item": item})
+            except ClientError as e:
+                logger.error(f"DynamoDB Get Error: {e}")
+                return response(500, {"error": "DynamoDB read failed"})
+        elif method == "POST":
             body = json.loads(event.get("body", "{}"))
-        except json.JSONDecodeError:
-            logger.error(f"Invalid JSON in POST request {request_id}")
-            return response(400, {"error": "Invalid JSON payload."})
+            ok, err = validate_item(body)
+            if not ok:
+                logger.error(f"Validation error for request {request_id}: {err}")
+                return response(400, {"error": err})
 
-        ok, err = validate_item(body)
-        if not ok:
-            logger.error(f"Validation error for request {request_id}: {err}")
-            return response(400, {"error": err})
-
-        logger.info(f"POST processed successfully for request {request_id}")
-        return response(200, {"message": "POST received", "data": body})
-    else:
-        logger.warning(f"Unsupported HTTP method {method} in request {request_id}")
-        return response(405, {"error": "Method not allowed"})
+            try:
+                table.put_item(Item=body)
+                logger.info(f"POST processed successfully for request {request_id}")
+                return response(200, {"message": "POST received", "data": body})
+            except ClientError as e:
+                logger.error(f"DynamoDB Error: {e}")
+                return response(500, {"error": "DynamoDB write failed"})
+        else:
+            logger.warning(f"Unsupported HTTP method {method} in request {request_id}")
+            return response(405, {"error": "Method not allowed"})
+    except Exception as e:
+        logger.exception(f"Unhandled error: {e}")
+        return response(500, {"error": "Internal server error"}) 
 
 
 

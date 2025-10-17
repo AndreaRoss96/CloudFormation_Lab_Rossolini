@@ -14,6 +14,20 @@ Parameters:
     Description: S3 key (object name) for the Lambda deployment package
 
 Resources:
+  # --------------------------------------------------------------------------
+  # DynamoDB Table
+  # --------------------------------------------------------------------------
+  ItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ItemsTable
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
 
   # --------------------------------------------------------------------------
   # API Gateway Resources <--> from Tutorial
