@@ -13,7 +13,7 @@ This lab is initially based on the guide “Build and Deploy REST API on AWS” 
 - lab_report.docx — Report of this 
 # How to deploy
 1. Create a S3 bucket
-2. Run `./deploy.sh` (when avialable)
+2. Run `./deploy.sh` (with your parameters)
 
 ## Requirements
 aws cli 
@@ -30,3 +30,4 @@ aws cloudformation deploy \
   --template template.yml \
   --stack-name restapi-cloudformation --capabilities CAPABILITY_IAM
 ```
+

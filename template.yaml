@@ -4,6 +4,15 @@ Description: >
   Returns client IP address
   Implements best practices for IAM, environment variables, monitoring, and observability.
 
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: S3 bucket containing the Lambda deployment package
+  S3Key:
+    Type: String
+    Description: S3 key (object name) for the Lambda deployment package
+
 Resources:
 
   # --------------------------------------------------------------------------
@@ -86,7 +95,7 @@ Resources:
                 Resource: !GetAtt LambdaFunction.Arn
 
   # --------------------------------------------------------------------------
-  # Lambda Function --> improve from tutorial for higher grade 
+  # Lambda Function --> improve from tutorial for higher grade (Hopefully)
   # --------------------------------------------------------------------------
   LambdaFunction:
     Type: AWS::Lambda::Function
@@ -94,14 +103,17 @@ Resources:
       Description: >
         Lambda function that returns client IP address.
       Code:
-        ZipFile: |
-          ...
+        S3Bucket: !Ref S3BucketName
+        S3Key: !Ref S3Key
       FunctionName: 'get_ip'
       Handler: index.lambda_handler
       MemorySize: 256
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.9
       Timeout: 60
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
 
   # --------------------------------------------------------------------------
   # Lambda IamRole -> to improve
