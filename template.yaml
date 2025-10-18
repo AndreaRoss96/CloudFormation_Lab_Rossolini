@@ -28,7 +28,8 @@ Resources:
         - AttributeName: id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
-
+  
+  #region API Gateway
   # --------------------------------------------------------------------------
   # API Gateway Resources <--> from Tutorial
   # --------------------------------------------------------------------------
@@ -48,7 +49,7 @@ Resources:
       PathPart: "ip"
       RestApiId: !Ref SimpleRestAPI
 
-  ApiGatewayMethod:
+  ApiGatewayMethodGET:
     Type: AWS::ApiGateway::Method
     Properties:
       HttpMethod: GET
@@ -60,18 +61,23 @@ Resources:
         Credentials: !GetAtt ApiGatewayIamRole.Arn
       ResourceId: !Ref ApiGatewayResource
       RestApiId: !Ref SimpleRestAPI
-
-  ApiGatewayModel:
-    Type: AWS::ApiGateway::Model
+    
+  ApiGatewayMethodPOST:
+    Type: AWS::ApiGateway::Method
     Properties:
-      ContentType: 'application/json'
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        Credentials: !GetAtt ApiGatewayIamRole.Arn
+      ResourceId: !Ref ApiGatewayResource
       RestApiId: !Ref SimpleRestAPI
-      Schema: {}
 
   ApiGatewayStage:
     Type: AWS::ApiGateway::Stage
     Properties:
-      TracingEnabled: true  # Enables X-Ray tracing for API Gateway
       DeploymentId: !Ref ApiGatewayDeployment
       Description: Development stage
       RestApiId: !Ref SimpleRestAPI
@@ -107,6 +113,7 @@ Resources:
               - Effect: 'Allow'
                 Action: 'lambda:InvokeFunction' # lambda:* -> is over permissible
                 Resource: !GetAtt LambdaFunction.Arn
+  #endregion
 
   # --------------------------------------------------------------------------
   # Lambda Function --> improve from tutorial for higher grade (Hopefully)
@@ -115,7 +122,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: >
-        Lambda function that returns client IP address.
+        Lambda function that handles GET and POST requests via API Gateway.
       Code:
         S3Bucket: !Ref S3BucketName
         S3Key: !Ref S3Key
@@ -128,6 +135,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: INFO
+          TABLE_NAME: !Ref ItemsTable
 
   # --------------------------------------------------------------------------
   # Lambda IamRole -> to improve
@@ -135,6 +143,7 @@ Resources:
   LambdaIamRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: get_ip_lambda_role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -144,14 +153,35 @@ Resources:
                 - 'lambda.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
-      Path: '/'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                Resource: !GetAtt ItemsTable.Arn
 
 
   # --------------------------------------------------------------------------
   # Lambda Permission for API Gateway
   # --------------------------------------------------------------------------
-
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SimpleRestAPI}/*/*
 
   # --------------------------------------------------------------------------
   # Outputs
   # --------------------------------------------------------------------------
+  Outputs:
+    ApiInvokeURL:
+      Description: Invoke URL for the REST API
+      Value: !Sub "https://${SimpleRestAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/ip"
