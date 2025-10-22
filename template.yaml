@@ -1,9 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Enhanced RESTful API using AWS API Gateway and AWS Lambda.
-  Returns client IP address
-  Implements best practices for IAM, environment variables, monitoring, and observability.
-
+  Returns client IP address.
 
 Parameters:
   S3BucketName:
@@ -46,8 +44,15 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       ParentId: !GetAtt SimpleRestAPI.RootResourceId
-      PathPart: "ip"
+      PathPart: ip
       RestApiId: !Ref SimpleRestAPI
+  
+  ApiGatewayItemResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ApiGatewayResource
+      RestApiId: !Ref SimpleRestAPI
+      PathPart: "{id}"
 
   ApiGatewayMethodGET:
     Type: AWS::ApiGateway::Method
@@ -57,9 +62,13 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
+          - {}
         Credentials: !GetAtt ApiGatewayIamRole.Arn
-      ResourceId: !Ref ApiGatewayResource
+        RequestTemplates:
+            application/json: '{"method":"GET", "resource":"/ip/{id}", "id":"$input.params(''id'')"}'
+      ResourceId: !Ref ApiGatewayItemResource
       RestApiId: !Ref SimpleRestAPI
     
   ApiGatewayMethodPOST:

@@ -6,7 +6,7 @@ import boto3
 # Logging configs
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO") # verbosity control
 logging.basicConfig(
-    level=LOG_LEVEL
+    level=LOG_LEVEL,
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -57,14 +57,14 @@ def lambda_handler(event, context):
     try:
         if method == "GET":
             logger.info(f"GET request processed for Request ID {request_id}")
-            params = event.get("queryStringParameters") or {}
+            params = event.get("pathParameters") or {}
             item_id = params.get("id") if params else None
             if not item_id:
                 return response(400, {"error": "Missing query parameter: id"})
             
             try:
                 res = table.get_item(Key={"id": item_id})
-                item = result.get("Item")
+                item = res.get("Item")
                 if not item:
                     return response(404, {"error": "Item not found"})
                 logger.info(f"Retrieved item: {item}")
