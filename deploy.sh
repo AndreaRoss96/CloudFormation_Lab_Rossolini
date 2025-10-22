@@ -1,32 +1,25 @@
 #!/bin/bash
+set -euo pipefail
+
+STACK_NAME="lambda-rest-dynamodb"
+S3_BUCKET="$1"   # bucket to upload lambda zip and use with cloudformation package
+CODE_KEY="index.zip"
+REGION=${AWS_REGION:-eu-west-1}
 
 echo "Zipping deployment package..."
-zip -r index.zip index.app
+zip -r ${CODE_KEY} index.app
 
 echo "Uploading to s3..."
-aws s3 cp index.zip s3://my-lambda-code-bucket/app.zip
+aws s3 cp ${CODE_KEY} s3://${S3_BUCKET}/${CODE_KEY} --region ${REGION}
 
 echo "Deploying CloudFormation stack..."
 aws cloudformation deploy \
   --template-file template.yaml \
-  --stack-name lambda-rest-dynamodb \
-  --parameter-overrides S3BucketName=my-lambda-bucket-00196817 S3Key=index.zip \
+  --stack-name ${STACK_NAME} \
+  --parameter-overrides S3BucketName=${S3_BUCKET} S3Key=${CODE_KEY} \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --region eu-west-1
+  --region ${REGION}
 
-echo "Fetching API Gateway invoke URL..."
-api_id=$(aws apigateway get-rest-apis \
-  --region eu-west-1 \
-  --query "items[?name=='whats_my_ip'].id" \
-  --output text)
+echo "Done. Outputs:"
+aws cloudformation describe-stacks --stack-name ${STACK_NAME} --query "Stacks[0].Outputs" --region ${REGION} --output table
 
-api_url="https://${api_id}.execute-api.eu-west-1.amazonaws.com/dev/ip"
-
-echo "Querying cloudformation..."
-echo "POST request"
-curl -X POST \
-    -H "Content-Type: application/json" \
-    -d '{"id":"123", "name":"Name"}' \
-   "$api_url"
-
- curl -X GET "$api_url"

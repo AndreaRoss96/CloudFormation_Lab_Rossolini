@@ -6,31 +6,27 @@ This lab is initially based on the guide “Build and Deploy REST API on AWS” 
 
 ## What this repo contains
 - template.yaml — CloudFormation template (Lambda + API Gateway + DynamoDB)
-- index.py — Lambda handler code
+- index.py - Lambda handler code.
+- deploy.sh - packaging & deploy helper.
+- test.sh - script to test POST and GET functionalities.
 
 # To be added
-- deploy.sh — packaging & deploy helper
-- lab_report.docx — Report of this 
+- lab_report.docx - Report of this assignment
+
 # How to deploy
 1. Create a S3 bucket
-2. Run `./deploy.sh` (with your parameters)
+2. Set up you `aws configure` (region eu-west-1, if you want to change region, you need to modify the deploy.sh script)
+3. Run `./deploy.sh <your_bucket>` (with your parameters)
 
 ## Requirements
-aws cli 
+- aws cli 
 `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install`
-verify installation with 
+- verify installation with 
 `aws --version`
-Eventually
+- Eventually
 `rm awscliv2.zip`
 
 
-## How to run 
-```bash
-aws cloudformation deploy \
-  --template template.yml \
-  --stack-name restapi-cloudformation --capabilities CAPABILITY_IAM
-```
-
-## Additional tutorial followed for porject improvement
-[Logging in Python](https://realpython.com/python-logging/)
-[Programming Amazon DynamoDB with Python and Boto3](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html)
+## Additional tutorials followed for porject improvement
+##### [Logging in Python](https://realpython.com/python-logging/)
+##### [Programming Amazon DynamoDB with Python and Boto3](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html)

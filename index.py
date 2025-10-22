@@ -47,6 +47,41 @@ def validate_item(payload):
     return True, None
 #endregion
 
+def get_item(event):
+    logger.info(f"GET request processed for Request ID {request_id}")
+    params = event.get("pathParameters") or {}
+    item_id = params.get("id") if params else None
+    if not item_id:
+        return response(400, {"error": "Missing query parameter: id"})
+    
+    try:
+        res = table.get_item(Key={"id": item_id})
+        item = res.get("Item")
+        if not item:
+            return response(404, {"error": "Item not found"})
+        logger.info(f"Retrieved item: {item}")
+        return response(200, {"item": item})
+    except ClientError as e:
+        logger.error(f"DynamoDB Get Error: {e}")
+        return response(500, {"error": "DynamoDB read failed"})
+
+
+def post_item(event):
+    body = json.loads(event.get("body", "{}"))
+    ok, err = validate_item(body)
+    if not ok:
+        logger.error(f"Validation error for request {request_id}: {err}")
+        return response(400, {"error": err})
+
+    try:
+        table.put_item(Item=body)
+        logger.info(f"POST processed successfully for request {request_id}")
+        return response(200, {"message": "POST received", "data": body})
+    except ClientError as e:
+        logger.error(f"DynamoDB Error: {e}")
+        return response(500, {"error": "DynamoDB write failed"})
+        
+
 def lambda_handler(event, context):
     request_id = getattr(context, "aws_request_id", "N/A")
     method = event.get("httpMethod")
@@ -56,36 +91,9 @@ def lambda_handler(event, context):
 
     try:
         if method == "GET":
-            logger.info(f"GET request processed for Request ID {request_id}")
-            params = event.get("pathParameters") or {}
-            item_id = params.get("id") if params else None
-            if not item_id:
-                return response(400, {"error": "Missing query parameter: id"})
-            
-            try:
-                res = table.get_item(Key={"id": item_id})
-                item = res.get("Item")
-                if not item:
-                    return response(404, {"error": "Item not found"})
-                logger.info(f"Retrieved item: {item}")
-                return response(200, {"item": item})
-            except ClientError as e:
-                logger.error(f"DynamoDB Get Error: {e}")
-                return response(500, {"error": "DynamoDB read failed"})
+            return get_item(event)
         elif method == "POST":
-            body = json.loads(event.get("body", "{}"))
-            ok, err = validate_item(body)
-            if not ok:
-                logger.error(f"Validation error for request {request_id}: {err}")
-                return response(400, {"error": err})
-
-            try:
-                table.put_item(Item=body)
-                logger.info(f"POST processed successfully for request {request_id}")
-                return response(200, {"message": "POST received", "data": body})
-            except ClientError as e:
-                logger.error(f"DynamoDB Error: {e}")
-                return response(500, {"error": "DynamoDB write failed"})
+            return post_item(event)
         else:
             logger.warning(f"Unsupported HTTP method {method} in request {request_id}")
             return response(405, {"error": "Method not allowed"})
