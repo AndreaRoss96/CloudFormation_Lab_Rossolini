@@ -85,7 +85,9 @@ Resources:
 
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
-    DependsOn: ApiGatewayMethod
+    DependsOn:
+      - ApiGatewayMethodGET
+      - ApiGatewayMethodPOST
     Properties:
       Description: Lambda API Deployment
       RestApiId: !Ref SimpleRestAPI
@@ -129,7 +131,7 @@ Resources:
       FunctionName: 'get_ip'
       Handler: index.lambda_handler
       MemorySize: 256
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt LambdaIamRole.Arn
       Runtime: python3.9
       Timeout: 60
       Environment:
@@ -178,10 +180,10 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SimpleRestAPI}/*/*
 
-  # --------------------------------------------------------------------------
-  # Outputs
-  # --------------------------------------------------------------------------
-  Outputs:
-    ApiInvokeURL:
-      Description: Invoke URL for the REST API
-      Value: !Sub "https://${SimpleRestAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/ip"
+# --------------------------------------------------------------------------
+# Outputs
+# --------------------------------------------------------------------------
+Outputs:
+  ApiInvokeURL:
+    Description: "Invoke URL for the REST API"
+    Value: !Sub "https://${SimpleRestAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/ip"

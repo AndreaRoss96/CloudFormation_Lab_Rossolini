@@ -11,10 +11,11 @@ aws s3 cp index.zip s3://my-lambda-code-bucket/app.zip
 echo "Deploying CloudFormation stack..."
 aws cloudformation deploy \
   --template-file template.yaml \
-  --stack-name my-lambda-rest-api \
-  --parameter-overrides S3BucketName=my-lambda-code-bucket S3Key=index.zip \
-  --capabilities CAPABILITY_IAM
-
+  --stack-name lambda-rest-dynamodb \
+  --parameter-overrides S3BucketName=my-lambda-bucket-00196817 S3Key=index.zip \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+  --region eu-west-1 
+  
 echo "Querying cloudformation..."
 curl -X POST \
     -H "Content-Type: application/json" \
