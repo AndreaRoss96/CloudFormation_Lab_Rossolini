@@ -7,7 +7,7 @@ CODE_KEY="index.zip"
 REGION=${AWS_REGION:-eu-west-1}
 
 echo "Zipping deployment package..."
-zip -r ${CODE_KEY} index.app
+zip -r ${CODE_KEY} index.py
 
 echo "Uploading to s3..."
 aws s3 cp ${CODE_KEY} s3://${S3_BUCKET}/${CODE_KEY} --region ${REGION}

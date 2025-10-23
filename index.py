@@ -47,7 +47,7 @@ def validate_item(payload):
     return True, None
 #endregion
 
-def get_item(event):
+def get_item(request_id, event):
     logger.info(f"GET request processed for Request ID {request_id}")
     params = event.get("pathParameters") or {}
     item_id = params.get("id") if params else None
@@ -66,7 +66,7 @@ def get_item(event):
         return response(500, {"error": "DynamoDB read failed"})
 
 
-def post_item(event):
+def post_item(request_id, event):
     body = json.loads(event.get("body", "{}"))
     ok, err = validate_item(body)
     if not ok:
@@ -91,9 +91,9 @@ def lambda_handler(event, context):
 
     try:
         if method == "GET":
-            return get_item(event)
+            return get_item(request_id, event)
         elif method == "POST":
-            return post_item(event)
+            return post_item(request_id, event)
         else:
             logger.warning(f"Unsupported HTTP method {method} in request {request_id}")
             return response(405, {"error": "Method not allowed"})

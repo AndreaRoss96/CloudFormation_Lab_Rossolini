@@ -1,32 +1,62 @@
-# CloudFormation_Lab_Rossolini
-Cloud Formation example in AWS
+# CloudFormation Lab: REST API on AWS
 
+This repository contains a **CloudFormation lab** for deploying a REST API on AWS, based on the guide ["Build and Deploy REST API on AWS" by Rino-Dev](https://rino-dev.com/build-and-deploy-rest-api-on-aws). The original example was replicated for learning purposes and subsequently enhanced to include improved functionality, better security, and automation practices.
 
-This lab is initially based on the guide “Build and Deploy REST API on AWS” by Rino-Dev (https://rino-dev.com/build-and-deploy-rest-api-on-aws). The original example was replicated for learning purposes and subsequently enhanced to include improved functionality, better security, and automation practices.
+---
 
-## What this repo contains
-- template.yaml — CloudFormation template (Lambda + API Gateway + DynamoDB)
-- index.py - Lambda handler code.
-- deploy.sh - packaging & deploy helper.
-- test.sh - script to test POST and GET functionalities.
+## Repository Contents
 
-# To be added
-- lab_report.docx - Report of this assignment
+| File/Script         | Description                                      |
+|---------------------|--------------------------------------------------|
+| `template.yaml`     | CloudFormation template (Lambda + API Gateway + DynamoDB) |
+| `index.py`          | Lambda handler code                              |
+| `deploy.sh`         | Packaging and deployment helper script           |
+| `test.sh`           | Script to test POST and GET functionalities      |
 
-# How to deploy
-1. Create a S3 bucket
-2. Set up you `aws configure` (region eu-west-1, if you want to change region, you need to modify the deploy.sh script)
-3. Run `./deploy.sh <your_bucket>` (with your parameters)
+### To Be Added
+- `lab_report.docx` — Assignment report
+
+---
+
+## Deployment Instructions
+
+1. **Create an S3 bucket** for deployment artifacts.
+2. **Configure AWS CLI** (use region `eu-west-1`; if you change the region, update `deploy.sh` accordingly):
+   ```bash
+   aws configure
+   ```
+3. **Run the deployment script**:
+   ```bash
+   ./deploy.sh <your_bucket>
+   ```
+
+---
 
 ## Requirements
-- aws cli 
-`curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install`
-- verify installation with 
-`aws --version`
-- Eventually
-`rm awscliv2.zip`
 
+- **AWS CLI** (installation instructions for Linux x86_64):
+  ```bash
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+  ```
+- **Verify installation**:
+  ```bash
+  aws --version
+  ```
+- **Clean up** (optional):
+  ```bash
+  rm awscliv2.zip
+  ```
 
-## Additional tutorials followed for porject improvement
-##### [Logging in Python](https://realpython.com/python-logging/)
-##### [Programming Amazon DynamoDB with Python and Boto3](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html)
+- **boto3** (if you want to test the python script locally):
+  ```bash
+  pip install boto3
+  ```
+---
+
+## Additional Resources
+
+The following tutorials were referenced for project improvements:
+- [Logging in Python](https://realpython.com/python-logging/)
+- [Programming Amazon DynamoDB with Python and Boto3](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-python.html)
