@@ -74,10 +74,20 @@ def post_item(request_id, event):
         return response(400, {"error": err})
 
     try:
+        ip_address = (
+            event.get("requestContext", {})
+                 .get("identity", {})
+                 .get("sourceIp")
+            or event.get("requestContext", {})
+                    .get("http", {})
+                    .get("sourceIp")
+            or "unknown"
+        )
+        body["ip_address"] = ip_address
         table.put_item(Item=body)
         logger.info(f"POST processed successfully for request {request_id}")
         return response(200, {"message": "POST received", "data": body})
-    except ClientError as e:
+    except Exception as e:
         logger.error(f"DynamoDB Error: {e}")
         return response(500, {"error": "DynamoDB write failed"})
         
@@ -100,6 +110,3 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.exception(f"Unhandled error: {e}")
         return response(500, {"error": "Internal server error"}) 
-
-
-
