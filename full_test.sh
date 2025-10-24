@@ -10,14 +10,6 @@ RESOURCE_PATH="${RESOURCE_PATH:-ip}"
 ID="${1:-123}"
 NAME="${2:-TestName}"
 
-# PRECHECKS 
-for cmd in aws jq curl; do
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "❌ Required command '$cmd' not found. Please install it first."
-    exit 1
-  fi
-done
-
 echo "Fetching API Gateway invoke URL for '${API_NAME}' in region '${REGION}'..."
 api_id=$(aws apigateway get-rest-apis \
   --region "${REGION}" \

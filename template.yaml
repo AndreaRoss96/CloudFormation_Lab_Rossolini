@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Enhanced RESTful API using AWS API Gateway and AWS Lambda.
-  Returns client IP address.
+  Handles POST and GET request to store id, name and IP address
+  of users that send requests and retrieve them accoordingly.
 
 Parameters:
   S3BucketName:

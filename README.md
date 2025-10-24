@@ -11,10 +11,8 @@ This repository contains a **CloudFormation lab** for deploying a REST API on AW
 | `template.yaml`     | CloudFormation template (Lambda + API Gateway + DynamoDB) |
 | `index.py`          | Lambda handler code                              |
 | `deploy.sh`         | Packaging and deployment helper script           |
-| `test.sh`           | Script to test POST and GET functionalities      |
-
-### To Be Added
-- `lab_report.docx` — Assignment report
+| `full_test.sh`      | Script to test POST and GET functionalities (more insightful)     |
+| `simple_test.sh`    | Script to test POST and GET functionalities (quicker)     |
 
 ---
 
